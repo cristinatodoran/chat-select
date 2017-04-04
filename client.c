@@ -165,7 +165,7 @@ void read_input(connection_t *connection)
 
     if(toUsername == NULL)
     {
-      puts(red "The format for private messages is: /m <username> <message>" RESET);
+      puts(red "The format for private messages is: /m username message" RESET);
       return;
     }
 
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
   fd_set file_descriptors;
 
   if (argc != 3) {
-    fprintf(stderr,"Usage: %s <IP> <port>\n", argv[0]);
+    fprintf(stderr,"Usage: %s IP port\n", argv[0]);
     exit(1);
   }
 

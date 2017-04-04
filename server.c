@@ -14,6 +14,8 @@
 
 #define MAX_CLIENTS 10
 
+connection_t logger_info;
+
 void init(connection_t *server_connection, int port)
 {
   if((server_connection->socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -101,6 +103,12 @@ void send_message_toAll(connection_t clients[], int sender, char *message)
   msg.type = PUBLIC_MESSAGE;
   strncpy(msg.username, clients[sender].username, MAX_USERNAMELEN);
   strncpy(msg.data, message, 256);
+
+  if(send(logger_info.socket, &msg, sizeof(msg), 0) < 0)
+  {
+   perror("Send to logger failed");
+   exit(1);
+  }
  
   for(int i = 0; i < MAX_CLIENTS; i++)
   {
@@ -108,11 +116,17 @@ void send_message_toAll(connection_t clients[], int sender, char *message)
     {
       if(send(clients[i].socket, &msg, sizeof(msg), 0) < 0)
       {
-          perror("Send failed");
+
+          perror("Send to client failed");
           exit(1);
       }
     }
   }
+}
+
+void store_message(message_t msg)
+{
+
 }
 
 
@@ -312,6 +326,40 @@ void handle_new_connection(connection_t *server_info, connection_t clients[])
   }
 }
 
+void connect_to_server(connection_t *connection, char *address, char *port)
+{
+
+  while(true)
+  {
+    // get_username(connection->username);
+    //get_password(connection->username);
+    if ((connection->socket = socket(AF_INET, SOCK_STREAM , IPPROTO_TCP)) < 0)
+    {
+        perror("Could not create socket");
+    }
+
+    connection->address.sin_addr.s_addr = inet_addr(address);
+    connection->address.sin_family = AF_INET;
+    connection->address.sin_port = htons(atoi(port));
+
+    if (connect(connection->socket, (struct sockaddr *)&connection->address , sizeof(connection->address)) < 0)
+    {
+        perror("Connect failed.");
+        exit(1);
+    }
+ 
+
+    break;
+  }
+
+
+  puts("Connected to server.");
+  puts("Type /help for usage.");
+}
+
+
+
+
 void read_input(connection_t clients[])
 {
   char input[255];
@@ -331,6 +379,10 @@ int main(int argc, char *argv[])
 
   connection_t server_info;
   connection_t clients[MAX_CLIENTS];
+
+  
+  connect_to_server(&logger_info,"127.0.0.1","10001");
+  puts("Connected to logger");
    
   for(int i = 0; i < MAX_CLIENTS; i++)
   {
